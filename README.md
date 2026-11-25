@@ -178,6 +178,20 @@ macOS 专有：`--no-network-repair`（跳过特权助手）、`--no-network-tri
 bash <(curl -fsSL https://raw.githubusercontent.com/<你的用户名>/<仓库名>/main/macos/install.sh)
 ```
 
+### 发布到你自己的 GitHub
+
+仓库根目录的 `publish.sh` 封装了创建公开仓库、推送 `main`、创建 Release 并上传
+arm64 包与 SHA256 的全部动作。**发布前需先在自己的终端完成交互式登录**（Agent 无法代做）：
+
+```bash
+gh auth login                 # 选择 GitHub.com / HTTPS / 浏览器登录
+gh auth status                # 确认账号正确
+./publish.sh <GitHub用户名> hzau-autologin-macos v1.2.0
+```
+
+脚本只读取 `dist/` 下已构建的资产，不会上传 `config.json`、`password.bin` 或日志。
+推送 `v*` tag 会触发 `release-macos.yml`，CI 构建的包会追加到同一个 Release。
+
 ### 验证方式
 
 `macos/tests/verify.sh` 覆盖：Python 编译、macOS 自带 bash 3.2 语法、plist 严格解析、
