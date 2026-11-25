@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  HZAU-AutoLogin 登录触发任务（等价 Windows 计划任务 HZAU-AutoLogin / AtLogOn）
+
+  由 install.sh 用 plutil 从 JSON 重新生成并替换占位符后写入
+  ~/Library/LaunchAgents/HZAU-AutoLogin.plist。本文件是模板，不要直接 launchctl load。
+
+  与 Windows 设置的映射：
+    AtLogOn                     -> RunAtLoad = true（LaunchAgent 在每次登录时加载并运行）
+    RunLevel Highest            -> 普通用户 LaunchAgent + 可选特权网络修复助手
+    Hidden / 无窗口             -> 后台命令行程序，无 Dock 图标、无终端窗口
+    MultipleInstances IgnoreNew -> 程序内 flock 文件锁
+    StartWhenAvailable          -> launchd 在唤醒后补跑错过的一次性任务
+    ExecutionTimeLimit 20min    -> 程序内 SIGALRM 20 分钟兜底
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>HZAU-AutoLogin</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__PROGRAM__</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__INSTALL_DIR__</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HZAU_AUTOLOGIN_DIR</key>
+        <string>__INSTALL_DIR__</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__STDOUT_LOG__</string>
+    <key>StandardErrorPath</key>
+    <string>__STDERR_LOG__</string>
+</dict>
+</plist>

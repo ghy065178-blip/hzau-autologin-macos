@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  HZAU-AutoLogin 周期巡检任务
+  （等价 Windows 计划任务 HZAU-AutoLogin-Reconnect：Once +2min, 每 30 分钟重复, 3650 天）
+
+  由 install.sh 用 plutil 从 JSON 重新生成并替换占位符后写入
+  ~/Library/LaunchAgents/HZAU-AutoLogin-Reconnect.plist。本文件是模板。
+
+  与 Windows 设置的映射：
+    RepetitionInterval 30min -> StartInterval = 1800（默认；install.sh 会用
+                                plutil -replace 写入 heartbeat-minutes 的实际值）
+    RepetitionDuration 3650d -> launchd 无到期概念，任务随 LaunchAgent 长期存在
+    Once +2min 首次触发     -> ProgramArguments 追加 reconnect 参数，
+                                程序内用 .first_reconnect_done 标记首次延后 120 秒
+    MultipleInstances IgnoreNew / Hidden / ExecutionTimeLimit -> 同登录任务
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>HZAU-AutoLogin-Reconnect</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__PROGRAM__</string>
+        <string>--reconnect</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__INSTALL_DIR__</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HZAU_AUTOLOGIN_DIR</key>
+        <string>__INSTALL_DIR__</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>1800</integer>
+    <key>KeepAlive</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__STDOUT_LOG__</string>
+    <key>StandardErrorPath</key>
+    <string>__STDERR_LOG__</string>
+</dict>
+</plist>

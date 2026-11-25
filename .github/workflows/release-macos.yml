@@ -1,0 +1,70 @@
+name: build-release-macos
+
+# 与现有 Windows release.yml 并列，互不干扰：同一个 v* tag 会同时产出
+# win64 zip 与 macOS zip。Windows 构建流程不做任何改动。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build macOS binary and zip
+        run: bash macos/build.sh --version "${{ github.ref_name }}" --python "$(command -v python3)"
+
+      # install.sh 的「自动下载 Release」走 latest/download 的固定资产名，
+      # 这里额外产出一份不带版本号、但带架构名的副本，供一行安装/源码安装使用。
+      - name: Create stable-named asset
+        run: |
+          ARCH=$(uname -m)
+          ZIP=$(ls dist/*.zip | head -1)
+          cp "$ZIP" "dist/hzau-autologin-macos-$ARCH.zip"
+          shasum -a 256 "dist/hzau-autologin-macos-$ARCH.zip" > "dist/hzau-autologin-macos-$ARCH.zip.sha256"
+
+      - name: List artifacts
+        run: ls -lh dist/*.zip dist/*.sha256 dist/hzau-autologin
+
+      - name: Compute SHA256
+        id: hash
+        run: |
+          ZIP=$(ls dist/hzau-autologin-*-macos-*.zip | head -1)
+          HASH=$(shasum -a 256 "$ZIP" | awk '{print $1}')
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "zip=$(basename "$ZIP")" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.zip
+            dist/*.sha256
+          body: |
+            ## macOS 安装
+
+            1. 下载与本机架构一致的 `hzau-autologin-${{ github.ref_name }}-macos-<arm64|x86_64>.zip`
+               （终端执行 `uname -m` 可查看架构）
+            2. 解压后双击 `install.command`，按提示输入学号和校园网密码
+            3. 首次会弹出一次系统授权框（用于安装 DHCP 网络修复助手，等价 Windows UAC），输入本机密码即可
+            4. 完成。以后登录 macOS 自动认证，每 30 分钟巡检一次
+
+            > 若 Finder 提示「无法打开，因为来自身份不明的开发者」，右键文件选「打开」，
+            > 或在终端执行 `xattr -cr <解压目录>`。
+
+            **macOS SHA256**: `${{ steps.hash.outputs.hash }}`
+
+            配置字段、交互流程、认证协议与 Windows 版完全一致；差异对照见 `macos/README.md`。

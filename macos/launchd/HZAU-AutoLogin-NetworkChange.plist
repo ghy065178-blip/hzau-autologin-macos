@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  HZAU-AutoLogin 网络变化触发任务（macOS 专属补充）
+
+  Windows 版只有「登录时」与「每 30 分钟」两个计划任务，因此「注销下线 / 遗忘 WiFi
+  后重新连接」这类**会话中途**的网络变化不会立刻触发认证，最长要等 30 分钟；
+  而 macOS 的 Captive Portal 检测是网络栈内置的，一检测到网络变化就弹认证窗口，
+  总是比工具快。
+
+  launchd 没有「网络状态变化」事件键，但 WatchPaths 可以在系统网络配置文件被改写时
+  启动一次性任务，效果等价且不引入常驻进程。监视的三个文件分别覆盖：
+    * preferences.plist                     —— 网络服务 / DHCP 变化
+    * com.apple.airport.preferences.plist   —— 加入或遗忘 WiFi 网络
+    * /var/run/resolv.conf                  —— DNS 随网络切换被重写
+
+  由 install.sh 渲染占位符后写入 ~/Library/LaunchAgents/；不需要时可用
+  install.sh 的 no-network-trigger 选项跳过。
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>HZAU-AutoLogin-NetworkChange</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__PROGRAM__</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__INSTALL_DIR__</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HZAU_AUTOLOGIN_DIR</key>
+        <string>__INSTALL_DIR__</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>WatchPaths</key>
+    <array>
+        <string>/Library/Preferences/SystemConfiguration/preferences.plist</string>
+        <string>/Library/Preferences/SystemConfiguration/com.apple.airport.preferences.plist</string>
+        <string>/var/run/resolv.conf</string>
+    </array>
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+    <key>KeepAlive</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__STDOUT_LOG__</string>
+    <key>StandardErrorPath</key>
+    <string>__STDERR_LOG__</string>
+</dict>
+</plist>
