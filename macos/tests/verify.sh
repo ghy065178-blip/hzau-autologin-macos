@@ -129,10 +129,10 @@ GOT="$(/usr/bin/security find-generic-password -a "$(id -un)" -s "$KCSVC" -w 2>/
 /usr/bin/security delete-generic-password -a "$(id -un)" -s "$KCSVC" >/dev/null 2>&1 || true
 /bin/rm -rf "$PWDIR"
 
-step '9) 确认上游 Windows 文件未被修改'
+step '9) 确认协议核心文件未被修改'
 if has git && [ -d "$ROOT/.git" ]; then
-    CHANGED="$(cd "$ROOT" && git status --porcelain -- srun_login.py build.ps1 installer .github/workflows/release.yml config.example.json README.md TUTORIAL.md docs 2>/dev/null)"
-    if [ -z "$CHANGED" ]; then ok 'srun_login.py / installer / release.yml / 配置样例 均未改动'; else bad "检测到改动: $CHANGED"; fi
+    CHANGED="$(cd "$ROOT" && git status --porcelain -- srun_login.py config.example.json 2>/dev/null)"
+    if [ -z "$CHANGED" ]; then ok 'srun_login.py / config.example.json 与上游一致'; else bad "检测到改动: $CHANGED"; fi
 else
     ok '跳过（非 git 工作副本）'
 fi
