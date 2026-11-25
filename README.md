@@ -21,7 +21,7 @@
 
 ## 二、安装（约 2 分钟）
 
-1. 从 [Releases](../../releases) 下载与本机架构一致的
+1. 从 [Releases](https://github.com/ghy065178-blip/hzau-autologin-macos/releases) 下载与本机架构一致的
    `hzau-autologin-<版本>-macos-<arm64|x86_64>.zip`，解压到任意位置。
    终端执行 `uname -m` 可查看架构。
 2. **双击解压目录里的 `install.command`**，会自动打开「终端」窗口。
@@ -175,7 +175,7 @@ macOS 专有：`--no-network-repair`（跳过特权助手）、`--no-network-tri
 一行安装（源码模式，需 Python ≥ 3.8）：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/<你的用户名>/<仓库名>/main/macos/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/ghy065178-blip/hzau-autologin-macos/main/macos/install.sh)
 ```
 
 ### 发布到你自己的 GitHub
@@ -186,7 +186,7 @@ arm64 包与 SHA256 的全部动作。**发布前需先在自己的终端完成�
 ```bash
 gh auth login                 # 选择 GitHub.com / HTTPS / 浏览器登录
 gh auth status                # 确认账号正确
-./publish.sh <GitHub用户名> hzau-autologin-macos v1.2.0
+./publish.sh ghy065178-blip hzau-autologin-macos v1.2.0
 ```
 
 脚本只读取 `dist/` 下已构建的资产，不会上传 `config.json`、`password.bin` 或日志。

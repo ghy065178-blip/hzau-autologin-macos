@@ -2,7 +2,7 @@
 # HZAU 校园网自动认证 macOS 版 —— 一键发布到自己的 GitHub
 #
 # 用法： ./publish.sh <GitHub用户名> [仓库名] [版本号]
-# 示例： ./publish.sh RenYuan916 hzau-autologin-macos v1.2.0
+# 示例： ./publish.sh ghy065178-blip hzau-autologin-macos v1.2.0
 #
 # 前置条件（必须先在自己的终端完成，Agent 无法代做交互式登录）：
 #   gh auth login            # 按提示选择 GitHub.com / HTTPS / 浏览器登录
@@ -30,6 +30,18 @@ if ! gh auth status >/dev/null 2>&1; then
     echo 'GitHub 未登录或凭据失效，请先在终端执行: gh auth login' >&2
     exit 1
 fi
+# 防止误用旧账号（例如账号被暂停、或 keyring 里残留其他账号的 token）
+CURRENT="$(gh api user --jq '.login' 2>/dev/null || true)"
+if [ -z "$CURRENT" ]; then
+    echo '无法读取当前登录账号（可能账号被暂停或 token 失效），请先执行: gh auth login' >&2
+    exit 1
+fi
+if [ "$CURRENT" != "$OWNER" ]; then
+    echo "当前登录账号是 $CURRENT，但目标账号是 $OWNER。" >&2
+    echo '请先执行: gh auth login（选择 GitHub.com / HTTPS / 浏览器登录，用新账号授权）' >&2
+    exit 1
+fi
+echo "==> 已确认登录账号: $CURRENT"
 
 ASSETS=(dist/hzau-autologin-"$VERSION"-macos-arm64.zip \
         dist/hzau-autologin-"$VERSION"-macos-arm64.zip.sha256)
